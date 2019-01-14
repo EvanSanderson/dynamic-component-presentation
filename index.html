@@ -30,8 +30,9 @@
     <div class="reveal">
       <div class="slides">
         <section>
-          <h1>A Neat Thing About Dynamic Components</h1>
+          <h3>Page Structure APIs and Dynamic Components</h3>
           <p>By Evan Sanderson</p>
+          <p>Developer at Politico</p>
         </section>
         <section data-markdown>
           <textarea data-template>
@@ -39,6 +40,11 @@
 		
 				 A special "generic" Vue component that can morph into any other component - accepts the name of a registered component -
 				or a component’s options object
+
+				```(html)
+				<component v-bind:is="currentTabComponent"></component>
+
+				```
 			</textarea
           >
         </section>
@@ -89,7 +95,7 @@
           >
         </section>
         <section>
-          <h1>Where does the headless CMS come in?</h1>
+          <h3>Why so excited, Evan?</h3>
           <p>
             Our problem/challenge at Politico was that we wanted the server to
             provide a payload to the client that would determine the page
