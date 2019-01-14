@@ -1,49 +1,202 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
 
-		<title>reveal.js</title>
+    <title>reveal.js</title>
 
-		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/black.css">
+    <link rel="stylesheet" href="css/reveal.css" />
+    <link rel="stylesheet" href="css/theme/black.css" />
 
-		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="lib/css/zenburn.css">
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css" />
 
-		<!-- Printing and PDF exports -->
-		<script>
-			var link = document.createElement( 'link' );
-			link.rel = 'stylesheet';
-			link.type = 'text/css';
-			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
-			document.getElementsByTagName( 'head' )[0].appendChild( link );
-		</script>
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.type = "text/css";
+      link.href = window.location.search.match(/print-pdf/gi)
+        ? "css/print/pdf.css"
+        : "css/print/paper.css";
+      document.getElementsByTagName("head")[0].appendChild(link);
+    </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>A Neat Thing About Dynamic Components</h1>
+          <p>By Evan Sanderson</p>
+        </section>
+        <section data-markdown>
+          <textarea data-template>
+				## What is a dynamic component?
+		
+				 A special "generic" Vue component that can morph into any other component - accepts the name of a registered component -
+				or a component’s options object
+			</textarea
+          >
+        </section>
+        <section data-markdown>
+          <textarea data-template>
+					## We can go from something that looks like this...
+					```html
+					<div id="dynamic-component-demo" class="demo">
+						<button @click="showTab(1)">
+							First Tab
+						</button>
+						<FirstTab v-if="isFirstTabShown"class="tab" />
+						<button @click="showTab(2)">
+							Second Tab
+						</button>
+						<SecondTab v-if="isSecondTabShown" class="tab" />
+						<button @click="showTab(3)">
+							Third Tab
+						</button>
+						<ThirdTab v-if="isThirdTabShown" class="tab" />
+						etc etc yuck I'm tired
+					</div>
+					```
+			</textarea
+          >
+        </section>
+        <section data-markdown>
+          <textarea data-template>
+			## ...to something like this.
+			[Working Example Courtesy of Chris Fritz](https://jsfiddle.net/chrisvfritz/b2qj69o1/)
+			```html
+			<div id="dynamic-component-demo" class="demo">
+				<button
+				v-for="tab in tabs"
+				v-bind:key="tab.name"
+				v-bind:class="['tab-button', { active: currentTab.name === tab.name }]"
+				v-on:click="currentTab = tab"
+				>
+				{{ tab.name }}
+				</button>
+				<component
+				v-bind:is="currentTab.component"
+				class="tab"
+				></component>
 			</div>
-		</div>
-
-		<script src="lib/js/head.min.js"></script>
-		<script src="js/reveal.js"></script>
-
-		<script>
-			// More info about config & dependencies:
-			// - https://github.com/hakimel/reveal.js#configuration
-			// - https://github.com/hakimel/reveal.js#dependencies
-			Reveal.initialize({
-				dependencies: [
-					{ src: 'plugin/markdown/marked.js' },
-					{ src: 'plugin/markdown/markdown.js' },
-					{ src: 'plugin/notes/notes.js', async: true },
-					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+			```
+		</textarea
+          >
+        </section>
+        <section>
+          <h1>Where does the headless CMS come in?</h1>
+          <p>
+            Our problem/challenge at Politico was that we wanted the server to
+            provide a payload to the client that would determine the page
+            structure. If the back end changes the page structure payload, the
+            FE responds seamlessly.
+          </p>
+        </section>
+        <section data-markdown>
+          <textarea data-template>
+				### So given the following JSON structure...
+				```(json)
+{
+   "containers":[
+      {
+         "type":"two-column",
+         "slots":[
+            {
+               "name":"center-well",
+               "modules":[
+                  {
+                     "type":"turtle-pictures",
+                     "data":{
+                        "pics":["babyturtle1.jpg", "babyturtle2.jpg", "babyturtle3.jpg"]
+                     }
+                  }
+               ]
+            },
+            {
+               "name":"right-rail",
+               "modules":[
+                  {
+                     "type":"by-line"
+                  },
+                  {
+                     "type":"calendar",
+                     "data":{
+                        "apiUrl":"/some/endpoint/we/need"
+                     }
+                  }
+               ]
+			},
+			{
+				"name": "footer",
+				"modules": [
+					"type": "org-info"
 				]
-			});
-		</script>
-	</body>
+			}
+         ]
+      }
+   ]
+}
+				```
+			</textarea
+          >
+        </section>
+        <section data-markdown>
+          <textarea data-template>
+				### ...we would expect something like the following page structure.
+				```html
+				<main class="page">
+					<section>
+						<TurtleGallery :images="data.pics" />
+					</section>
+					<aside>
+						<ByLine />
+						<Calendar api="data.apiUrl"/>
+					</aside>
+					<footer>
+						<OrgInfo :phone="data.phoneNumber"/>
+					</footer>
+				</main>
+				```
+			</textarea
+          >
+        </section>
+        <section>
+          <p>
+            And we'd want the ability to add or change the module layout
+            composition without causing major headaches.
+          </p>
+          <p>One way we can do that is with dynamic components.</p>
+          <p>Let's take a look!</p>
+        </section>
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+      // More info about config & dependencies:
+      // - https://github.com/hakimel/reveal.js#configuration
+      // - https://github.com/hakimel/reveal.js#dependencies
+      Reveal.initialize({
+        dependencies: [
+          { src: "plugin/markdown/marked.js" },
+          { src: "plugin/markdown/markdown.js" },
+          { src: "plugin/notes/notes.js", async: true },
+          {
+            src: "plugin/highlight/highlight.js",
+            async: true,
+            callback: function() {
+              hljs.initHighlightingOnLoad();
+            }
+          }
+        ]
+      });
+    </script>
+  </body>
 </html>
